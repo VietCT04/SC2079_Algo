@@ -385,191 +385,141 @@ export const AlgorithmCore = () => {
 
   return (
     <CoreContainter title="Algorithm Simulator">
-      {tutorial && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative max-w-2xl p-10 font-serif text-left text-white bg-gray-900 rounded-lg shadow-lg animate-fadeIn">
-            <h2 className="text-xl font-bold">
-              Welcome to Group 17's MDP Simulator
-            </h2>
-            <p className="mt-2">
-              Firstly, please make sure that the algorithm server is running.
-            </p>
-            <p className="mt-2 ">
-              Then select a preset obstacle course, or make your own!
-              <br />
-              You can{" "}
-              <span className="text-sky-300">click on an empty plot</span> to
-              add obstacles,
-              <br />
-              or{" "}
-              <span className="text-orange-300">
-                click on existing obstacles
-              </span>{" "}
-              to change their direction
-            </p>
-            {/* prettier-ignore */}
-            <p className="mt-2">
-              The <span className="font-bold">Reset Grid</span> button will reset
-              the grid to the selected preset state, 
-              <br/>
-              or clear the grid if <span className="font-bold"> Custom preset</span> is selected.
-            </p>
-            <p className="mt-2">
-              Finally, select your desired algorithm type and run the algorithm.
-            </p>
-            <button
-              className="px-4 py-2 mt-4 bg-blue-500 rounded hover:bg-blue-600"
-              onClick={() => {
-                setTutorial(false);
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex justify-center m-4">
-        <FaQuestionCircle
-          className="cursor-pointer"
-          size={32}
-          onClick={() => setTutorial(true)}
-        />
-        {/* <Button onClick={() => setTutorial(true)}>Help</Button> */}
-      </div>
-
-      {/* Server Status */}
-      <ServerStatus />
-
-      {/* Select Tests */}
-      <TestSelector
-        selectedTestEnum={selectedTestEnum}
-        setSelectedTestEnum={setSelectedTestEnum}
-        selectedTest={selectedTest}
-        setSelectedTest={setSelectedTest}
-        setAlgoRuntime={setAlgoRuntime}
-      />
-
-      {/* Run Algo */}
-      <div className="flex justify-center m-4">
-        <Button onClick={handleRunAlgorithm}>
-          <span>Run Algorithm</span>
-          {isAlgorithmLoading ? (
-            <FaSpinner className="animate-spin" />
-          ) : (
-            <FaSitemap className="text-[18px]" />
-          )}
-        </Button>
-      </div>
-
-      {/* Algo Runtime */}
-      {algoRuntime && (
-        <div className="flex justify-center mb-4">
-          Algorithm Runtime:&nbsp;
-          <span className="font-bold">{algoRuntime}</span>&nbsp;(
-          {selectedAlgoTypeEnum})
-        </div>
-      )}
-
-      {/* Animation */}
-      {robotPositions && (
-        <div className="flex flex-col items-center justify-center gap-2 mt-2 mb-4">
-          {/* Start Animation */}
-          <Button
-            onClick={() => {
-              if (startAnimation) {
-                // Stop Animation
-                setStartAnimation(false);
-              } else {
-                // Start Animation
-                setIsManualAnimation(false);
-                setStartAnimation(true);
-                if (currentStep === totalSteps - 1) {
-                  setCurrentRobotPosition(robotPositions[0]);
-                  setCurrentStep(0);
-                }
-              }
-            }}
-          >
-            <span>{startAnimation ? "Stop Animation" : "Start Animation"}</span>
-            {startAnimation ? <FaPause /> : <FaPlay />}
-          </Button>
-
-          {/* Slider */}
-          <label
-            htmlFor="steps-range"
-            className="font-bold text-[14px] flex gap-2 items-center"
-          >
-            <FaChevronLeft
-              className="cursor-pointer"
-              onClick={() => {
-                if (!startAnimation && currentStep - 1 >= 0) {
-                  setIsManualAnimation(true);
-                  setCurrentStep((prev) => prev - 1);
-                }
-              }}
-            />
-            <span>
-              Step: {currentStep + 1} / {totalSteps}
-            </span>
-            <FaChevronRight
-              className="cursor-pointer"
-              onClick={() => {
-                if (!startAnimation && currentStep + 1 < totalSteps) {
-                  setIsManualAnimation(true);
-                  setCurrentStep((prev) => prev + 1);
-                }
-              }}
-            />
-          </label>
-          <input
-            id="steps-range"
-            type="range"
-            min={0}
-            max={totalSteps - 1}
-            value={currentStep}
-            onChange={(e) => {
-              setCurrentStep(Number(e.target.value));
-              setIsManualAnimation(true);
-            }}
-            onPointerUp={() => setIsManualAnimation(false)}
-            step={1}
-            className="w-1/2 h-2 bg-orange-900 rounded-lg appearance-none cursor-pointer"
-            disabled={startAnimation === true}
+      {/* Main Layout: Grid Left, Controls Right */}
+      <div className="flex flex-row justify-center gap-6">
+        {/* LEFT: Navigation Grid */}
+        <div className="flex-shrink-0">
+          <NavigationGrid
+            robotPosition={currentRobotPosition ?? ROBOT_INITIAL_POSITION}
+            movementVertical={movementVertical ?? []}
+            movementSteer={movementSteer ?? []}
+            turningPath={turningPath}
+            obstacles={selectedTest.obstacles}
+            canAddObstacle={true}
+            setSelectedTest={setSelectedTest}
           />
         </div>
-      )}
 
-      {robotPositions && (
-        <div className="flex items-center justify-center m-4">
-          <div className="flex flex-col items-center justify-center w-64 rounded-lg bg-sky-900">
-            <span className="font-bold text-center text-white">
-              Robot Position
-            </span>
-            <div className="flex m-4 gap-x-4">
-              <NumberDisplay
-                label="x"
-                value={currentRobotPosition ? currentRobotPosition.x : 0}
-              />
-              <NumberDisplay
-                label="y"
-                value={currentRobotPosition ? currentRobotPosition.y : 0}
+        {/* RIGHT: Controls */}
+        <div className="flex flex-col items-center gap-4 w-96 m-20">
+          {/* Help Button */}
+          <div className="flex justify-center m-2">
+            <FaQuestionCircle
+              className="cursor-pointer"
+              size={32}
+              onClick={() => setTutorial(true)}
+            />
+          </div>
+
+          {/* Server Status */}
+          <ServerStatus />
+
+          {/* Test Selector */}
+          <TestSelector
+            selectedTestEnum={selectedTestEnum}
+            setSelectedTestEnum={setSelectedTestEnum}
+            selectedTest={selectedTest}
+            setSelectedTest={setSelectedTest}
+            setAlgoRuntime={setAlgoRuntime}
+          />
+
+          {/* Run Algorithm */}
+          <Button onClick={handleRunAlgorithm}>
+            <span>Run Algorithm</span>
+            {isAlgorithmLoading ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaSitemap className="text-[18px]" />
+            )}
+          </Button>
+
+          {/* Runtime */}
+          {algoRuntime && (
+            <div className="font-bold">
+              Algorithm Runtime: {algoRuntime} ({selectedAlgoTypeEnum})
+            </div>
+          )}
+
+          {/* Animation Controls */}
+          {robotPositions && (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                onClick={() => {
+                  if (startAnimation) setStartAnimation(false);
+                  else {
+                    setIsManualAnimation(false);
+                    setStartAnimation(true);
+                    if (currentStep === totalSteps - 1) {
+                      setCurrentRobotPosition(robotPositions[0]);
+                      setCurrentStep(0);
+                    }
+                  }
+                }}
+              >
+                {startAnimation ? "Stop Animation" : "Start Animation"}
+                {startAnimation ? <FaPause /> : <FaPlay />}
+              </Button>
+
+              {/* Step Slider */}
+              <label className="font-bold text-sm flex gap-2 items-center">
+                <FaChevronLeft
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (!startAnimation && currentStep - 1 >= 0) {
+                      setIsManualAnimation(true);
+                      setCurrentStep((prev) => prev - 1);
+                    }
+                  }}
+                />
+                Step: {currentStep + 1} / {totalSteps}
+                <FaChevronRight
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (!startAnimation && currentStep + 1 < totalSteps) {
+                      setIsManualAnimation(true);
+                      setCurrentStep((prev) => prev + 1);
+                    }
+                  }}
+                />
+              </label>
+
+              <input
+                type="range"
+                min={0}
+                max={totalSteps - 1}
+                value={currentStep}
+                onChange={(e) => {
+                  setCurrentStep(Number(e.target.value));
+                  setIsManualAnimation(true);
+                }}
+                onPointerUp={() => setIsManualAnimation(false)}
+                step={1}
+                className="w-64 h-2 bg-orange-900 rounded-lg cursor-pointer"
+                disabled={startAnimation === true}
               />
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Navigation Grid */}
-      <NavigationGrid
-        robotPosition={currentRobotPosition ?? ROBOT_INITIAL_POSITION}
-        movementVertical={movementVertical ?? []}
-        movementSteer={movementSteer ?? []}
-        turningPath={turningPath}
-        obstacles={selectedTest.obstacles}
-        canAddObstacle={true}
-        setSelectedTest={setSelectedTest}
-      />
+          {/* Robot Position */}
+          {robotPositions && (
+            <div className="flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center w-64 rounded-lg bg-sky-900">
+                <span className="font-bold text-white">Robot Position</span>
+                <div className="flex gap-x-4 m-4">
+                  <NumberDisplay
+                    label="x"
+                    value={currentRobotPosition ? currentRobotPosition.x : 0}
+                  />
+                  <NumberDisplay
+                    label="y"
+                    value={currentRobotPosition ? currentRobotPosition.y : 0}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </CoreContainter>
   );
 };

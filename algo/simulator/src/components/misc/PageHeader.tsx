@@ -5,7 +5,6 @@ export const PageHeader = () => {
   return (
     <div className="flex flex-col items-center justify-center">
       {/* Logo */}
-      <img src="/logo.png" alt="logo" />
 
       {/* Title */}
       <div className="font-bold text-[42px] text-center font-serif ">

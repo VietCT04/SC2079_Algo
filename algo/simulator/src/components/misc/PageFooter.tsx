@@ -4,10 +4,10 @@ import { FaGithub } from "react-icons/fa";
 export const PageFooter = () => {
   return (
     <footer className="flex justify-center gap-2 font-serif ">
-      <div>&copy; AY24/25 Sem 2 Group 17</div>
+      <div>&copy; AY25/26 Sem 1 Group 11</div>
       <div>|</div>
       <a
-        href="https://github.com/CSA100/MDP"
+        href="https://github.com/VietCT04/SC2079_Algo"
         target="_blank"
         rel="noopener noreferrer"
         className="cursor-pointer hover:text-black"
