@@ -8,8 +8,7 @@ export const PageHeader = () => {
 
       {/* Title */}
       <div className="font-bold text-[42px] text-center font-serif ">
-        <div>[SC2079]</div>
-        <div>Multi-Disciplinary Design Project</div>
+        <div>SC2079 MDP Group 11</div>
       </div>
 
       {/* Subtitle */}

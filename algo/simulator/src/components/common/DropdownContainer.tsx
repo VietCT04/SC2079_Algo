@@ -14,7 +14,7 @@ export const DropdownContainer = (props: DropdownContainerProps) => {
 
   return (
     <div className="relative flex justify-center">
-      <div className="relative min-w-[210px] bg-sky-900 text-white px-2 py-1 rounded shadow-xl">
+      <div className="relative min-w-[210px] bg-black text-white px-2 py-1 rounded shadow-xl">
         {/* Selector */}
         <div
           className="z-0 flex items-center justify-between gap-2 cursor-pointer"
@@ -32,7 +32,7 @@ export const DropdownContainer = (props: DropdownContainerProps) => {
         <div
           className={`${
             !isOpen && "invisible translate-y-1"
-          } absolute z-20 top-10 left-0 flex flex-col gap-3 bg-sky-900 px-2 py-2 rounded w-full cursor-pointer transition-all`}
+          } absolute z-20 top-10 left-0 flex flex-col gap-3 bg-black px-2 py-2 rounded w-full cursor-pointer transition-all`}
         >
           {itemOptions.map((currentItem) => (
             <DropdownContainerOptions

@@ -131,7 +131,7 @@ const createHTMLGridCellRobot = (
     <td
       id={`cell-${x}-${y}`}
       className={`border-2 border-orange-900 w-8 h-8 align-middle text-center ${
-        type === "body" ? "bg-green-300" : "bg-blue-400"
+        type === "body" ? "bg-orange-400" : "bg-blue-500"
       }`}
     />
   );

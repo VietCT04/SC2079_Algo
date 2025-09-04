@@ -21,7 +21,6 @@ export const Layout = (props: LayoutProps) => {
         <main className="flex-1">{children}</main>
 
         {/* Footer */}
-        <PageFooter />
       </div>
     </>
   );

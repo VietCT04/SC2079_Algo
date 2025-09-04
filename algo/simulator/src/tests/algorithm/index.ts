@@ -23,47 +23,17 @@ export interface AlgoTestDataInterface {
 
 export enum AlgoTestEnum {
   Custom = "Custom",
-  Basic_Mock = "Basic Mock",
-  Basic_U_Turn = "Basic U-Turn",
-  Corners = "Corners",
-  Obstacles_7 = "7 Obstacles",
-  Shapes_V = "V Shape",
-  Obstacles_5_Basic = "5 Obstacles (Basic)",
-  AlgoTestCollisionCheck_A = "Collision Checking (A)",
-  AlgoTestCollisionCheck_B = "Collision Checking (B)",
-  AlgoTestCollisionCheck_C = "Collision Checking (C)",
-  AlgoTestOfficialMockLayout = "Official Mock Layout",
-  AlgoTestBoundaryTesting = "Boundary Testing",
+  Obstacles_5_Basic = "5 Obstacles",
 }
 
 export const AlgoTestEnumsList = [
   AlgoTestEnum.Custom,
-  AlgoTestEnum.Basic_Mock,
-  AlgoTestEnum.Basic_U_Turn,
-  AlgoTestEnum.Corners,
-  AlgoTestEnum.Obstacles_7,
-  AlgoTestEnum.Shapes_V,
   AlgoTestEnum.Obstacles_5_Basic,
-  AlgoTestEnum.AlgoTestCollisionCheck_A,
-  AlgoTestEnum.AlgoTestCollisionCheck_B,
-  AlgoTestEnum.AlgoTestCollisionCheck_C,
-  AlgoTestEnum.AlgoTestOfficialMockLayout,
-  AlgoTestEnum.AlgoTestBoundaryTesting,
 ];
 
 export const AlgoTestEnumMapper = {
   [AlgoTestEnum.Custom]: AlgoTestCustom,
-  [AlgoTestEnum.Basic_Mock]: AlgoTestBasicMock,
-  [AlgoTestEnum.Basic_U_Turn]: AlgoTestBasicUTurn,
-  [AlgoTestEnum.Corners]: AlgoTestCorners,
-  [AlgoTestEnum.Obstacles_7]: AlgoTestObstacles_7,
-  [AlgoTestEnum.Shapes_V]: AlgoTestShapes_V,
   [AlgoTestEnum.Obstacles_5_Basic]: AlgoTestObstacles_5_Basic,
-  [AlgoTestEnum.AlgoTestCollisionCheck_A]: AlgoTestCollisionCheck_A,
-  [AlgoTestEnum.AlgoTestCollisionCheck_B]: AlgoTestCollisionCheck_B,
-  [AlgoTestEnum.AlgoTestCollisionCheck_C]: AlgoTestCollisionCheck_C,
-  [AlgoTestEnum.AlgoTestOfficialMockLayout]: AlgoTestOfficialMockLayout,
-  [AlgoTestEnum.AlgoTestBoundaryTesting]: AlgoTestBoundaryTesting,
 };
 
 // Specific Test Exports

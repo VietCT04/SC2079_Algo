@@ -312,7 +312,6 @@ export const AlgorithmCore = () => {
       );
       let turningCellsStep: { x: number; y: number }[] = [];
 
-      turningCellsStep.push({ x, y });
       if (x === currentRobotPosition.x && y === currentRobotPosition.y) {
         turningCellsArray.push(turningCellsStep);
         last = i + 1;
@@ -341,7 +340,6 @@ export const AlgorithmCore = () => {
         }
       }
 
-      turningCellsStep.push({ x, y });
       if (x === currentRobotPosition.x && y === currentRobotPosition.y) {
         turningCellsArray.push(turningCellsStep);
         last = i + 1;
@@ -361,7 +359,6 @@ export const AlgorithmCore = () => {
       while (x !== currentRobotPosition.x && y !== currentRobotPosition.y) {
         x += xySigns.x;
         y += xySigns.y;
-        turningCellsStep.push({ x, y });
       }
 
       while (x !== currentRobotPosition.x || y !== currentRobotPosition.y) {
@@ -372,7 +369,6 @@ export const AlgorithmCore = () => {
           if (y < currentRobotPosition.y) y++;
           else y--;
         }
-        turningCellsStep.push({ x, y });
       }
       // console.log("DEBUG ", i, ": ", turningCellsStep);
       turningCellsArray.push(turningCellsStep);
@@ -402,15 +398,6 @@ export const AlgorithmCore = () => {
 
         {/* RIGHT: Controls */}
         <div className="flex flex-col items-center gap-4 w-96 m-20">
-          {/* Help Button */}
-          <div className="flex justify-center m-2">
-            <FaQuestionCircle
-              className="cursor-pointer"
-              size={32}
-              onClick={() => setTutorial(true)}
-            />
-          </div>
-
           {/* Server Status */}
           <ServerStatus />
 
@@ -429,7 +416,7 @@ export const AlgorithmCore = () => {
             {isAlgorithmLoading ? (
               <FaSpinner className="animate-spin" />
             ) : (
-              <FaSitemap className="text-[18px]" />
+              <></>
             )}
           </Button>
 
@@ -459,63 +446,6 @@ export const AlgorithmCore = () => {
                 {startAnimation ? "Stop Animation" : "Start Animation"}
                 {startAnimation ? <FaPause /> : <FaPlay />}
               </Button>
-
-              {/* Step Slider */}
-              <label className="font-bold text-sm flex gap-2 items-center">
-                <FaChevronLeft
-                  className="cursor-pointer"
-                  onClick={() => {
-                    if (!startAnimation && currentStep - 1 >= 0) {
-                      setIsManualAnimation(true);
-                      setCurrentStep((prev) => prev - 1);
-                    }
-                  }}
-                />
-                Step: {currentStep + 1} / {totalSteps}
-                <FaChevronRight
-                  className="cursor-pointer"
-                  onClick={() => {
-                    if (!startAnimation && currentStep + 1 < totalSteps) {
-                      setIsManualAnimation(true);
-                      setCurrentStep((prev) => prev + 1);
-                    }
-                  }}
-                />
-              </label>
-
-              <input
-                type="range"
-                min={0}
-                max={totalSteps - 1}
-                value={currentStep}
-                onChange={(e) => {
-                  setCurrentStep(Number(e.target.value));
-                  setIsManualAnimation(true);
-                }}
-                onPointerUp={() => setIsManualAnimation(false)}
-                step={1}
-                className="w-64 h-2 bg-orange-900 rounded-lg cursor-pointer"
-                disabled={startAnimation === true}
-              />
-            </div>
-          )}
-
-          {/* Robot Position */}
-          {robotPositions && (
-            <div className="flex items-center justify-center">
-              <div className="flex flex-col items-center justify-center w-64 rounded-lg bg-sky-900">
-                <span className="font-bold text-white">Robot Position</span>
-                <div className="flex gap-x-4 m-4">
-                  <NumberDisplay
-                    label="x"
-                    value={currentRobotPosition ? currentRobotPosition.x : 0}
-                  />
-                  <NumberDisplay
-                    label="y"
-                    value={currentRobotPosition ? currentRobotPosition.y : 0}
-                  />
-                </div>
-              </div>
             </div>
           )}
         </div>

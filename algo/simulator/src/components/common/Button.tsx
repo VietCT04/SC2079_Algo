@@ -14,7 +14,7 @@ export const Button = (props: ButtonProps) => {
   return (
     <div
       className={
-        "w-max h-8 flex items-center gap-2 px-2 py-1 bg-sky-900 rounded font-bold text-white text-[14px] shadow-lg hover:bg-sky-700 cursor-pointer " +
+        "w-max h-8 flex items-center gap-2 px-2 py-1 bg-black rounded font-bold text-white text-[14px] shadow-lg hover:bg-sky-700 cursor-pointer " +
         className
       }
       {...divProps}
