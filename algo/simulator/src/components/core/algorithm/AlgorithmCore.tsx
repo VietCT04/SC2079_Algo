@@ -61,6 +61,7 @@ export const AlgorithmCore = () => {
     AlgoTestEnumMapper[AlgoTestEnum.Custom]
   );
   const [dropSelectedTest, setDropSelectedTest] = useState(AlgoTestEnum.Custom);
+
   useEffect(() => {
     setHighlightCenterCell([]);
   }, [selectedTestEnum]);
@@ -215,6 +216,20 @@ export const AlgorithmCore = () => {
   useEffect(() => {
     generateTurningCells(robotPositions ?? [], setTurningArray);
   }, [robotPositions]);
+
+  // Timer Limit
+  const timerDuration = 5000;
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (startAnimation) {
+      timer = setTimeout(() => {
+        setStartAnimation(false); // Stop animation after x ms
+      }, timerDuration);
+    }
+    return () => {
+      clearTimeout(timer); // Cleanup timer on component unmount or when animation stops
+    };
+  }, [startAnimation]);
 
   const getRobotDirection = (robotPosition: Position) => {
     return convertThetaToDirectionString(robotPosition.theta);
