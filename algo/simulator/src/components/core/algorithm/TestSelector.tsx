@@ -93,6 +93,15 @@ export const TestSelector = (props: TestSelectorProps) => {
       />
 
       {/* Manage Custom Obstacles */}
+      {
+        //selectedTestEnum === AlgoTestEnum.Custom
+        true && (
+          <Button onClick={() => setIsManageObstaclesModalOpen(true)}>
+            <span>Manage Obstacles</span>
+            <FaBox />
+          </Button>
+        )
+      }
 
       {/* Reset grid button */}
       <Button
