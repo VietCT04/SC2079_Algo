@@ -61,7 +61,9 @@ export const AlgorithmCore = () => {
     AlgoTestEnumMapper[AlgoTestEnum.Custom]
   );
   const [dropSelectedTest, setDropSelectedTest] = useState(AlgoTestEnum.Custom);
-
+  useEffect(() => {
+    setHighlightCenterCell([]);
+  }, [selectedTestEnum]);
   // Select Tests
   useEffect(() => {
     const selectedTest = AlgoTestEnumMapper[selectedTestEnum];
@@ -142,6 +144,9 @@ export const AlgorithmCore = () => {
   const [turningPath, setTurningPath] = useState<{ x: number; y: number }[]>(
     []
   );
+  const [highlightCenterCell, setHighlightCenterCell] = useState<
+    { x: number; y: number }[]
+  >([]);
 
   // Animation
   useEffect(() => {
@@ -201,6 +206,7 @@ export const AlgorithmCore = () => {
         setNextRobotPositionIndex(currentStep);
         setCurrentRobotPosition(robotPositions[currentStep]);
         setTurningPath(turningArray[currentStep]);
+        const c = robotPositions[currentStep];
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -393,6 +399,7 @@ export const AlgorithmCore = () => {
             obstacles={selectedTest.obstacles}
             canAddObstacle={true}
             setSelectedTest={setSelectedTest}
+            highlightCenterCell={highlightCenterCell}
           />
         </div>
 

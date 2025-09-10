@@ -6,16 +6,19 @@ import {
 } from "../../../../constants";
 import { Obstacle, ObstacleDirection } from "../../../../schemas/obstacle";
 import { Position, RobotDirection } from "../../../../schemas/robot";
-import {
-  convertThetaToDirection,
-  convertThetaToDirectionString,
-} from "./conversions";
+import { convertThetaToDirectionString } from "./conversions";
 
 /**
  * Creates a HTML Grid.
- * @abstract This function will look at the state of the cell and style it accordingly. E.g.: Empty cell vs Cell with Robot.
+ * Paint order (highest priority first inside the loop):
+ *  1) Robot (body/camera/center)
+ *  2) Stored centerTrail cells (past centers)  ← NEW
+ *  3) Turning path
+ *  4) Obstacles
+ *  5) Empty
+ *
  * @returns React.ReactNode[][] - `<td />[][]`
- * */
+ */
 export const createHTMLGrid = (
   robotPosition: Position,
   movementVertical: number[],
@@ -23,8 +26,10 @@ export const createHTMLGrid = (
   turningPath: { x: number; y: number }[],
   obstacles: Obstacle[],
   canAddObstacle: boolean,
+  highlightCenterCell: { x: number; y: number }[],
   handleAddObstacle: (x: number, y: number, d: number) => void,
   handleChangeObstacleDirection: (x: number, y: number, new_d: number) => void
+  /** NEW: list of all center cells visited so far */
 ) => {
   const grid: React.ReactNode[][] = [];
 
@@ -32,50 +37,56 @@ export const createHTMLGrid = (
     const currentRow: React.ReactNode[] = [];
 
     for (let x = 0; x < GRID_TOTAL_WIDTH; x++) {
-      // Cell is a turning path
-      if (
-        turningPath.filter((path) => path.x === x && path.y === y).length > 0
-      ) {
-        currentRow.push(createHTMLGridCellTurn(x, y));
-      }
-      // Cell Contains Robot.
-      else if (isRobotCell(robotPosition, x, y))
+      // --- Robot first (so current center is never covered) ---
+      if (isRobotCell(robotPosition, x, y)) {
+        const [cxOff, cyOff] = convertRobotThetaToCenterOffsetBlock(
+          robotPosition.theta
+        );
+        const centerX = robotPosition.x + cxOff;
+        const centerY = robotPosition.y + cyOff;
+        const isCenter =
+          (x === centerX && y === centerY) ||
+          highlightCenterCell.some((c) => c.x === x && c.y === y);
+        if (isCenter) highlightCenterCell.push({ x, y });
+        const [camOffX, camOffY] = convertRobotThetaToCameraOffsetBlock(
+          robotPosition.theta
+        );
+        const isCamera =
+          x === robotPosition.x + camOffX && y === robotPosition.y + camOffY;
+
         currentRow.push(
           createHTMLGridCellRobot(
             x,
             y,
-            x ===
-              robotPosition.x +
-                convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[0] &&
-              y ===
-                robotPosition.y +
-                  convertRobotThetaToCameraOffsetBlock(robotPosition.theta)[1]
-              ? "camera"
-              : "body"
+            isCenter ? "center" : isCamera ? "camera" : "body"
           )
         );
-      // Cell Contains an Obstacle
-      else if (
-        obstacles.filter((obstacle) => obstacle.x === x && obstacle.y === y)
-          .length > 0
-      ) {
+      }
+      // --- Turning path (only if not occupied above) ---
+      else if (turningPath.some((p) => p.x === x && p.y === y)) {
+        currentRow.push(createHTMLGridCellTurn(x, y));
+      }
+      // --- Obstacles ---
+      else if (obstacles.some((o) => o.x === x && o.y === y)) {
+        const dir = obstacles.find((o) => o.x === x && o.y === y)!.d;
         currentRow.push(
           createHTMLGridCellObstacle(
             x,
             y,
-            obstacles.filter(
-              (obstacle) => obstacle.x === x && obstacle.y === y
-            )[0].d,
+            dir,
             canAddObstacle,
             handleChangeObstacleDirection
           )
         );
+      } else if (highlightCenterCell.some((c) => c.x === x && c.y === y)) {
+        currentRow.push(createHTMLGridCellVisitedCenter(x, y));
       }
-      // Empty Cell
-      else
+      // --- Empty ---
+      else {
         currentRow.push(
           createHTMLGridCellEmpty(x, y, canAddObstacle, handleAddObstacle)
         );
+      }
     }
     grid.push(currentRow);
   }
@@ -83,10 +94,6 @@ export const createHTMLGrid = (
 };
 
 // ---------- Helper Functions - HTML ---------- //
-/**
- * Creates a `<td />` for an empty cell
- * @used_by createHTMLGrid()
- */
 const createHTMLGridCellEmpty = (
   x: number,
   y: number,
@@ -118,29 +125,51 @@ const createHTMLGridCellTurn = (x: number, y: number) => {
   );
 };
 
-/**
- * Creates a `<td />` for a cell that contains the Robot's body
- * @used_by createHTMLGrid()
- */
+const createHTMLGridCellVisitedCenter = (x: number, y: number) => {
+  // Style for stored centers; same red as live center for consistency
+  return (
+    <td
+      id={`cell-${x}-${y}`}
+      className="border-2 border-orange-900 w-8 h-8 align-middle text-center bg-red-500"
+    />
+  );
+};
+
+/** Robot cells (body/camera/center) */
 const createHTMLGridCellRobot = (
   x: number,
   y: number,
-  type: "camera" | "body"
+  type: "camera" | "body" | "center"
 ) => {
   return (
     <td
       id={`cell-${x}-${y}`}
       className={`border-2 border-orange-900 w-8 h-8 align-middle text-center ${
-        type === "body" ? "bg-orange-400" : "bg-blue-500"
+        type === "center"
+          ? "bg-red-500" // middle cell (current) stays red
+          : type === "body"
+          ? "bg-orange-400" // other robot cells
+          : "bg-blue-500" // camera
       }`}
     />
   );
 };
 
-/**
- * Creates a `<td />` for a cell that contains an Obstacle
- * @used_by createHTMLGrid()
- */
+const createFaceClass = (direction: ObstacleDirection) => {
+  switch (direction) {
+    case ObstacleDirection.N:
+      return "border-t-4 border-t-red-700";
+    case ObstacleDirection.S:
+      return "border-b-4 border-b-red-700";
+    case ObstacleDirection.E:
+      return "border-r-4 border-r-red-700";
+    case ObstacleDirection.W:
+      return "border-l-4 border-l-red-700";
+  }
+  return "";
+};
+
+/** Obstacle cell */
 const createHTMLGridCellObstacle = (
   x: number,
   y: number,
@@ -148,27 +177,13 @@ const createHTMLGridCellObstacle = (
   canChangeObstacleDirection: boolean,
   handleChangeObstacleDirection: (x: number, y: number, new_d: number) => void
 ) => {
-  let imageFaceBorderClassName = "";
-  switch (direction) {
-    case ObstacleDirection.N:
-      imageFaceBorderClassName = "border-t-4 border-t-red-700";
-      break;
-    case ObstacleDirection.S:
-      imageFaceBorderClassName = "border-b-4 border-b-red-700";
-      break;
-    case ObstacleDirection.E:
-      imageFaceBorderClassName = "border-r-4 border-r-red-700";
-      break;
-    case ObstacleDirection.W:
-      imageFaceBorderClassName = "border-l-4 border-l-red-700";
-      break;
-  }
+  const face = createFaceClass(direction);
 
   if (!canChangeObstacleDirection) {
     return (
       <td
         id={`cell-${x}-${y}`}
-        className={`border border-orange-900 w-8 h-8 align-middle text-center bg-amber-400 ${imageFaceBorderClassName}`}
+        className={`border border-orange-900 w-8 h-8 align-middle text-center bg-amber-400 ${face}`}
       />
     );
   }
@@ -176,7 +191,7 @@ const createHTMLGridCellObstacle = (
   return (
     <td
       id={`cell-${x}-${y}`}
-      className={`border border-orange-900 w-8 h-8 align-middle text-center bg-amber-400 ${imageFaceBorderClassName} cursor-pointer hover:bg-amber-500`}
+      className={`border border-orange-900 w-8 h-8 align-middle text-center bg-amber-400 ${face} cursor-pointer hover:bg-amber-500`}
       title="Change obstacle direction"
       onClick={() =>
         handleChangeObstacleDirection(x, y, (direction.valueOf() % 4) + 1)
@@ -207,89 +222,49 @@ export const addHTMLGridLables = (grid: React.ReactNode[][]) => {
 
 // ---------- Helper Functions - Calculations ---------- //
 /**
- * @deprecated Fixed Bottom Left (x, y) area occupied by Robot as Robot's current position regardless of Robot's facing.
+ * Used mixed anchors depending on facing (matches isRobotCell):
+ * - N / NE / NW    : anchor at bottom-left
+ * - S / SE / SW    : anchor at top-right
+ * - E              : anchor at top-left
+ * - W              : anchor at bottom-right
  * Converts a Robot's Theta rotation to the associated Camera Offset on the grid
- * @returns (x, y) offset of the robot's camera from the bottom left corner of the robot
- */
-export const _convertRobotThetaToCameraOffsetBlock = (theta: number) => {
-  const robotDirection = convertThetaToDirectionString(theta);
-  // East
-  if (robotDirection === "East") {
-    return [2, 1];
-  }
-  // North
-  else if (robotDirection === "North") {
-    return [1, 2];
-  }
-  // West
-  else if (robotDirection === "West") {
-    return [0, 1];
-  }
-  // South
-  else if (robotDirection === "South") {
-    return [1, 0];
-  }
-  // NorthEast
-  else if (robotDirection === "NorthEast") {
-    return [2, 2];
-  }
-  // NorthWest
-  else if (robotDirection === "NorthWest") {
-    return [0, 2];
-  } // SouthEast
-  else if (robotDirection === "SouthEast") {
-    return [2, 0];
-  } // SouthWest
-  else if (robotDirection === "SouthWest") {
-    return [0, 0];
-  }
-  return [0, 0];
-};
-
-/**
- * Used Bottom Left of Robot's Body as Robot's current (x, y) position.
- * Converts a Robot's Theta rotation to the associated Camera Offset on the grid
- * @returns (x, y) offset of the robot's camera from the bottom left corner of the robot
+ * @returns (x, y) offset of the robot's camera from the robot anchor
  */
 export const convertRobotThetaToCameraOffsetBlock = (theta: number) => {
   const robotDirection = convertThetaToDirectionString(theta);
-  // East
-  if (robotDirection === RobotDirection.E) {
-    return [2, -1];
-  }
-  // North
-  else if (robotDirection === RobotDirection.N) {
-    return [1, 2];
-  }
-  // West
-  else if (robotDirection === RobotDirection.W) {
-    return [-2, 1];
-  }
-  // South
-  else if (robotDirection === RobotDirection.S) {
-    return [-1, -2];
-  }
-  // NorthEast
-  else if (robotDirection === "NorthEast") {
-    return [2, 2];
-  }
-  // NorthWest
-  else if (robotDirection === "NorthWest") {
-    return [0, 2];
-  } // SouthEast
-  else if (robotDirection === "SouthEast") {
-    return [0, -2];
-  } // SouthWest
-  else if (robotDirection === "SouthWest") {
-    return [-2, -2];
-  }
+  if (robotDirection === RobotDirection.E) return [2, -1];
+  else if (robotDirection === RobotDirection.N) return [1, 2];
+  else if (robotDirection === RobotDirection.W) return [-2, 1];
+  else if (robotDirection === RobotDirection.S) return [-1, -2];
+  else if (robotDirection === "NorthEast") return [2, 2];
+  else if (robotDirection === "NorthWest") return [0, 2];
+  else if (robotDirection === "SouthEast") return [0, -2];
+  else if (robotDirection === "SouthWest") return [-2, -2];
   return [0, 0];
 };
 
-/**
- * Checks if current cell is occupied by a Robot based on it's (x, y) position and facing.
- * @location
- */
+/** Offset from robot anchor to the **center cell** of the 3×3 body */
+export const convertRobotThetaToCenterOffsetBlock = (theta: number) => {
+  const dir = convertThetaToDirectionString(theta);
+  switch (dir) {
+    case RobotDirection.N:
+    case "NorthEast":
+    case "NorthWest":
+      return [1, 1]; // from bottom-left to center
+    case RobotDirection.S:
+    case "SouthEast":
+    case "SouthWest":
+      return [-1, -1]; // from top-right to center
+    case RobotDirection.E:
+      return [1, -1]; // from top-left to center
+    case RobotDirection.W:
+      return [-1, 1]; // from bottom-right to center
+    default:
+      return [0, 0];
+  }
+};
+
+/** Is a cell inside the 3×3 robot footprint given the current anchor/facing */
 export const isRobotCell = (
   robotPosition: Position,
   cell_x: number,
@@ -303,51 +278,35 @@ export const isRobotCell = (
     case RobotDirection.N:
     case "NorthEast":
     case "NorthWest":
-      if (
+      return (
         robotPosition.x <= cell_x &&
         cell_x <= robotPosition.x + (ROBOT_GRID_WIDTH - 1) &&
         robotPosition.y <= cell_y &&
         cell_y <= robotPosition.y + (ROBOT_GRID_HEIGHT - 1)
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+      );
     case RobotDirection.S:
     case "SouthEast":
     case "SouthWest":
-      if (
+      return (
         robotPosition.x - (ROBOT_GRID_WIDTH - 1) <= cell_x &&
         cell_x <= robotPosition.x &&
         robotPosition.y - (ROBOT_GRID_HEIGHT - 1) <= cell_y &&
         cell_y <= robotPosition.y
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+      );
     case RobotDirection.E:
-      if (
+      return (
         robotPosition.x <= cell_x &&
         cell_x <= robotPosition.x + (ROBOT_GRID_WIDTH - 1) &&
         robotPosition.y - (ROBOT_GRID_HEIGHT - 1) <= cell_y &&
         cell_y <= robotPosition.y
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+      );
     case RobotDirection.W:
-      if (
+      return (
         robotPosition.x - (ROBOT_GRID_WIDTH - 1) <= cell_x &&
         cell_x <= robotPosition.x &&
         robotPosition.y <= cell_y &&
         cell_y <= robotPosition.y + (ROBOT_GRID_HEIGHT - 1)
-      ) {
-        return true;
-      } else {
-        return false;
-      }
+      );
     default:
       return false;
   }
