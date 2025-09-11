@@ -108,9 +108,11 @@ export const AlgorithmCore = () => {
         "/algo/simulator",
         algoInput
       );
+      console.log(algoOutput);
       // console.log(algoOutput);
       // console.log(convertAlgoOutputToStepwisePosition(algoOutput.positions));
       // console.log(turningPath);
+
       setRobotPositions(
         convertAlgoOutputToStepwisePosition(algoOutput.positions)
       );
@@ -218,7 +220,7 @@ export const AlgorithmCore = () => {
   }, [robotPositions]);
 
   // Timer Limit
-  const timerDuration = 5000;
+  const timerDuration = 20000;
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (startAnimation) {
@@ -442,6 +444,33 @@ export const AlgorithmCore = () => {
             )}
           </Button>
 
+          {/* Slider */}
+          <label
+            htmlFor="steps-range"
+            className="font-bold text-[14px] flex gap-2 items-center"
+          >
+            <FaChevronLeft
+              className="cursor-pointer"
+              onClick={() => {
+                if (!startAnimation && currentStep - 1 >= 0) {
+                  setIsManualAnimation(true);
+                  setCurrentStep((prev) => prev - 1);
+                }
+              }}
+            />
+            <span>
+              Step: {currentStep + 1} / {totalSteps}
+            </span>
+            <FaChevronRight
+              className="cursor-pointer"
+              onClick={() => {
+                if (!startAnimation && currentStep + 1 < totalSteps) {
+                  setIsManualAnimation(true);
+                  setCurrentStep((prev) => prev + 1);
+                }
+              }}
+            />
+          </label>
           {/* Runtime */}
           {algoRuntime && (
             <div className="font-bold">

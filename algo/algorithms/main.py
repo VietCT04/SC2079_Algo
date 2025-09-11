@@ -128,7 +128,7 @@ def main(algo_input: AlgoInput):
       simulator_algo_output.append(Position(-1, -1, -1))
       simulator_algo_vert.append(-2)
       simulator_algo_steer.append(-2)
-
+  
 
     return (simulator_algo_output, simulator_algo_vert, simulator_algo_steer)
   

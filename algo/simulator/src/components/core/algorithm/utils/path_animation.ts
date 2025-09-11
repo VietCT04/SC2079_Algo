@@ -32,6 +32,7 @@ export const convertAlgoOutputToStepwisePosition = (
       y: Math.floor(position.y / GRID_BLOCK_SIZE_CM),
       theta: convertPositiveThetaToPostiveNegativeScale(position.theta),
     };
+    console.log(parsedPosition);
     return parsedPosition;
   });
 };
